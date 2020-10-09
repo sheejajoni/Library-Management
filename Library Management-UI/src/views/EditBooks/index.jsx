@@ -1,0 +1,330 @@
+import React, { Component } from 'react';
+import styles from './styles';
+import classNames from 'classnames';
+import { withStyles } from '@material-ui/styles';
+import {PostData} from '../../services/PostData/PostData';
+import { Button, IconButton, TextField,FormControl,Select,MenuItem,InputLabel } from '@material-ui/core';
+import { toast } from 'react-toastify';
+import { css } from 'glamor';
+import {Redirect} from 'react-router-dom';
+import 'react-toastify/dist/ReactToastify.css';
+import Preview from '../../layout/Preview';
+import axios from 'axios';
+ class EditBooks extends Component {
+     constructor(props){
+         super(props);
+         this.state = {
+            query: '',
+            books : [],
+            ISBN: '',
+            open: false,
+            name: '',
+            author: '',
+            publisher: '',
+            edition: '',
+            price: '',
+            rack: '0',
+            show:false,
+            resp:'',
+            redirectToReferrer:false,
+            fields:{},
+            errors:{},
+            bookid:'',
+         };
+         this.onChange = this.onChange.bind(this);
+         this.editBook = this.editBook.bind(this);
+         this.getBooks = this.getBooks.bind(this);
+        
+     }
+     onChange(e){
+       
+        this.setState({[e.target.name]:e.target.value});
+        
+    
+      }
+     
+      getBooks(book) {
+    
+    this.setState({bookid:book.bookid});
+  this.setState({edition:book.edition});
+ this.setState({ISBN:book.isbn});
+    this.setState({author: book.author});
+    this.setState({name: book.name});
+    this.setState({publisher: book.publisher}); 
+    this.setState({price: book.price});
+    this.setState({rack: book.rack});  
+  
+    
+
+        }
+    
+    
+      componentWillMount(){
+       
+         
+         var self =this;
+         
+        var sessionid = localStorage.getItem('sessionId');
+        
+         var userid = localStorage.getItem('userid');
+         var searchval = {name :search};
+       var data = {userId:userid,batchsize:"25",offset:"0",filter:searchval};
+         
+         axios.post("http://localhost/getbookdetails",data,{ headers: { Authorization: sessionid } })
+         .then(function(res){
+           console.log(res.data.books);
+           self.setState({books:res.data.books[0]});
+           
+           self.getBooks(res.data.books[0]);
+
+           })
+           .catch((error) => {
+             alert('error ' + error);
+          });
+          
+          
+      
+      }
+      editBooks() {
+        
+       if (this.validateForm()) {
+        var uid = localStorage.getItem('userid');
+        var sid = localStorage.getItem('sessionId');
+        
+        const s = {
+	userid : uid, 
+          bookid :this.state.bookid,
+	isbn :this.state.ISBN,
+        name:this.state.name,
+       author:this.state.author,
+	publisher:this.state.publisher,
+      edition:this.state.edition,
+	rack:this.state.rack,
+	price:this.state.price
+      
+      };
+      var self = this;
+      console.log(s);
+      axios.put("http://localhost/updatebook", s,{
+        headers: 
+            {Authorization : sid},
+        }
+
+    )
+          .then((result) => {
+            let responseJson = result.data;
+            
+    
+            if(responseJson.successMessage ==="Update Details Successfully")
+              {
+                toast.configure();
+                // toast("Invalid Login !");
+                toast("Sucessfully Edited", {
+                 position: toast.POSITION.TOP_RIGHT,
+                 className: css({
+                     background: "#0693e3 ",
+                     color:"#F7FCF7"
+                 })
+             });
+             self.setState({redirectToReferrer:true});
+              }
+            else
+            {
+              toast.configure();
+             // toast("Invalid Login !");
+             toast("Edit failed", {
+              position: toast.POSITION.TOP_RIGHT,
+              className: css({
+                  background: "#007bff #0693e3",
+                  color:"#F0FFF0"
+              })
+          });
+          self.setState({redirectToReferrer:true});
+          }
+    
+          });
+        }
+  
+  
+      }
+    
+    
+      validateForm() {
+
+        let fields = this.state;
+        let errors = {};
+        let formIsValid = true;
+    
+    
+    
+        if (!fields["ISBN"]) {
+          formIsValid = false;
+          errors["ISBN"] = "*Please enter ISBN.";
+        }
+        if (!fields["name"]) {
+          formIsValid = false;
+          errors["name"] = "*Please enter book name.";
+        }
+        if (!fields["author"]) {
+          formIsValid = false;
+          errors["author"] = "*Please enter author name.";
+        }
+       
+        if (!fields["publisher"]) {
+          formIsValid = false;
+          errors["roleid"] = "*Please enter publisher name.";
+        }
+
+	if (!fields["edition"]) {
+          formIsValid = false;
+          errors["edition"] = "*Please enter edition date.";
+        }
+
+	if (!fields["price"]) {
+          formIsValid = false;
+          errors["roleid"] = "*Please enter price.";
+        }
+
+	if (!fields["rack"]) {
+          formIsValid = false;
+          errors["roleid"] = "*Please enter rack number.";
+        }
+    
+        
+    
+    
+        this.setState({
+          errors: errors
+        });
+        return formIsValid;
+    
+    
+      }
+  render() {
+
+    const { classes,className } = this.props;
+    const rootClassName = classNames (classes.root,className) ;
+    if(this.state.redirectToReferrer){
+      return(<Redirect to = {'/managebooks'}/>);
+    }
+  
+    return (
+        <Preview title = "Edit Book">
+
+        <div className={rootClassName}>
+        <form className={classes.form}><div style = {{marginTop:'100px'}}></div>
+	<TextField
+           className={classes.textField}
+           label="ISBN Number"
+           name="ISBN"
+           margin="normal"
+           type="text"
+           value={this.state.ISBN}
+           onChange={this.onChange}
+           variant="outlined"
+       /> <div className={classes.fieldError}>{this.state.errors.ISBN}</div><br/>
+
+
+       <TextField
+           className={classes.textField}
+           label="Book Name"
+           name="name"
+           margin="normal"
+           type="text"
+           value={this.state.name}
+           onChange={this.onChange}
+           variant="outlined"
+       /> <div className={classes.fieldError}>{this.state.errors.name}</div><br/>
+
+       <TextField
+           className={classes.textField}
+           label="Author Name"
+           name="author"
+           margin="normal"margin="normal"
+           type="text"
+           onChange={this.onChange}
+           variant="outlined"
+           value={this.state.author}
+          disabled
+       /> <div className={classes.fieldError}>{this.state.errors.author}</div><br/>
+       
+    
+       <TextField
+           className={classes.textField}
+           label="Publisher"
+           name="publisher"
+           margin="normal"
+           type="text"
+           value={this.state.publisher}
+           onChange={this.onChange}
+           variant="outlined"
+       /> <div className={classes.fieldError}>{this.state.errors.publisher}</div>
+      <br/>
+
+	<TextField
+           className={classes.textField}
+           label="Edition"
+           name="edition"
+           margin="normal"
+           type="text"
+           value={this.state.edition}
+           onChange={this.onChange}
+           variant="outlined"
+       /> <div className={classes.fieldError}>{this.state.errors.edition}</div>
+      <br/>
+
+
+	<TextField
+           className={classes.textField}
+           label="Price"
+           name="price"
+           margin="normal"
+           type="text"
+           value={this.state.price}
+           onChange={this.onChange}
+           variant="outlined"
+       /> <div className={classes.fieldError}>{this.state.errors.price}</div>
+      <br/>
+
+
+	<TextField
+           className={classes.textField}
+           label="Rack Number"
+           name="rack"
+           margin="normal"
+           type="text"
+           value={this.state.rack}
+           onChange={this.onChange}
+           variant="outlined"
+       /> <div className={classes.fieldError}>{this.state.errors.rack}</div>
+      <br/>
+
+     
+       
+ 
+     </form>
+
+     <Button
+                          color="primary"
+                          variant="outlined"
+                          onClick={this.editBooks}
+                          className={classes.registerbtn}
+                      >
+                       Edit
+                      </Button>
+                      <Button
+                          color="primary"
+                          variant="outlined"
+                          style = {{marginLeft: '20px'}}
+                          className={classes.registerbtn}
+                      >
+                        Cancel
+                      </Button>
+   
+     </div>
+    </Preview>
+ 
+    );
+  }
+}
+export default withStyles(styles)(EditBooks);
