@@ -88,7 +88,7 @@ class SignIn extends Component {
     db = db.replace(/['"]+/g, '');   
      var data = {userName: this.state.identity, password: this.state.password}
     if (this.validateForm()) {
-      axios.post("http://178.128.165.237:8082/login1",data)
+      axios.post("http://localhost/login1",data)
       .then(function(res){
        
         localStorage.setItem('sessionId',res.data.tokenId);
@@ -226,9 +226,9 @@ class SignIn extends Component {
     }
 
 
-    if ((this.state.redirectToReferrer) && (this.state.roleid=='2' || this.state.roleid=='3') && (sessionStorage.getItem('sessionId')) )
+    if ((this.state.redirectToReferrer) && (this.state.roleid=='0' )
     {
-      return (<Redirect to={'/customerdashboard'}/>)
+      return (<Redirect to={'/dashboard'}/>)
     }
 
    
